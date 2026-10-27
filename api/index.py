@@ -6,8 +6,10 @@ from pydantic import BaseModel
 
 app = FastAPI(title="GenSkip AI Proxy Server", version="1.1.0")
 
-# API Key lấy từ Environment Variables trên Vercel Dashboard
+# 1. Lấy API Key từ Environment Variable trên Vercel Dashboard
 API_KEY = os.getenv("GEMINI_API_KEY")
+
+# 2. Khởi tạo Client bằng API Key
 client = genai.Client(api_key=API_KEY) if API_KEY else None
 
 
@@ -16,8 +18,8 @@ class SummarizeRequest(BaseModel):
     text: str
 
 class SelectChoiceRequest(BaseModel):
-    context: str         # Đoạn thoại gần nhất
-    options: list[str]   # Danh sách các câu lựa chọn tìm thấy
+    context: str         # Đoạn thoại gần nhất để lấy ngữ cảnh
+    options: list[str]   # Danh sách các câu lựa chọn tìm thấy trên màn hình
 
 
 # --- ENDPOINTS ---
