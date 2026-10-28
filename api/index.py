@@ -1,15 +1,16 @@
 import os
 import re
 from fastapi import FastAPI, HTTPException
-import google.generativeai as genai  # type: ignore
+from google import genai
 from pydantic import BaseModel
 
-app = FastAPI(title="GenSkip AI Proxy Server", version="1.1.0")
+app = FastAPI(title="GenSkip AI Proxy Server", version="1.2.0")
 
 # 1. Lấy API Key từ Environment Variable trên Vercel Dashboard
 API_KEY = os.getenv("GEMINI_API_KEY")
-if API_KEY:
-  genai.configure(api_key=API_KEY)
+
+# 2. Khởi tạo Client theo SDK mới (không dùng genai.configure nữa)
+client = genai.Client(api_key=API_KEY) if API_KEY else None
 
 
 # --- REQUEST SCHEMAS ---
@@ -32,7 +33,7 @@ def read_root():
 
 @app.post("/summarize")
 def summarize_lore(req: SummarizeRequest):
-  if not API_KEY:
+  if not client:
     raise HTTPException(
         status_code=500, detail="Chưa cấu hình GEMINI_API_KEY trên Vercel!"
     )
@@ -46,8 +47,9 @@ def summarize_lore(req: SummarizeRequest):
     "{req.text}"
     """
   try:
-    model = genai.GenerativeModel("gemini-2.5-flash")
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model="gemini-2.5-flash", contents=prompt
+    )
     return {
         "summary": response.text.strip() if response.text else "Không có dữ liệu."
     }
@@ -57,7 +59,7 @@ def summarize_lore(req: SummarizeRequest):
 
 @app.post("/select_choice")
 def select_best_choice(req: SelectChoiceRequest):
-  if not API_KEY or not req.options:
+  if not client or not req.options:
     return {"best_index": 1}
 
   formatted_options = "\n".join(
@@ -77,8 +79,9 @@ def select_best_choice(req: SelectChoiceRequest):
     Yêu cầu đầu ra: CHỈ trả về duy nhất 1 con số tương ứng với số thứ tự phương án (ví dụ: 1, 2, hoặc 3). KHÔNG viết thêm bất kỳ từ nào khác.
     """
   try:
-    model = genai.GenerativeModel("gemini-2.5-flash")
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model="gemini-2.5-flash", contents=prompt
+    )
     raw_text = response.text.strip() if response.text else "1"
 
     match = re.search(r"\d+", raw_text)
