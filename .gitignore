@@ -182,3 +182,5 @@ cython_debug/
 build/
 dist/
 __pycache__/
+.vercel
+.env*
