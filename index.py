@@ -56,7 +56,7 @@ def summarize_lore(req: SummarizeRequest):
     """
   try:
     response = client.models.generate_content(
-        model="gemini-2.5-flash", contents=prompt
+        model="gemini-3.8-flash", contents=prompt
     )
     return {
         "summary": response.text.strip() if response.text else "Không có dữ liệu."
