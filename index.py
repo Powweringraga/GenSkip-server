@@ -3,8 +3,16 @@ import re
 from fastapi import FastAPI, HTTPException
 from google import genai
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="GenSkip AI Proxy Server", version="1.2.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # 1. Lấy API Key từ Environment Variable trên Vercel Dashboard
 API_KEY = os.getenv("GEMINI_API_KEY")
