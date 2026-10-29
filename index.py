@@ -38,6 +38,7 @@ class SelectChoiceRequest(BaseModel):
 def read_root():
   return {"status": "ok", "message": "GenSkip Proxy Server is running on Vercel!"}
 
+MODELS_TO_TRY = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
 
 @app.post("/summarize")
 def summarize_lore(req: SummarizeRequest):
@@ -45,6 +46,22 @@ def summarize_lore(req: SummarizeRequest):
     raise HTTPException(
         status_code=500, detail="Chưa cấu hình GEMINI_API_KEY trên Vercel!"
     )
+  last_error = None
+  for model_name in MODELS_TO_TRY:
+    try:
+      response = client.models.generate_content(
+          model=model_name,
+          contents=f"Summarize this Genshin dialogue: {req.text}",
+      )
+      return {"summary": response.text, "model_used": model_name}
+    except Exception as e:
+      last_error = str(e)
+      continue  # Nếu model bị 503 hoặc lỗi, thử tiếp model tiếp theo trong danh sách
+
+  raise HTTPException(
+      status_code=503,
+      detail=f"Tất cả model Gemini đều đang quá tải. Lỗi cuối: {last_error}",
+  )
 
   if not req.text or len(req.text.strip()) < 10:
     return {"summary": "Không tìm thấy đoạn thoại đủ dài để tóm tắt."}
