@@ -1,2 +1,12 @@
+[project]
+name = "genskip-server"
+version = "1.2.0"
+dependencies = [
+    "fastapi",
+    "google-genai",
+    "pydantic",
+    "uvicorn",
+]
+
 [tool.vercel]
 entrypoint = "index:app"
